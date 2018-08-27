@@ -274,3 +274,14 @@ import { uuid } from 'io-ts-types/lib/string/uuid'
 
 uuid.decode('6e9c5587-a342-4b63-a901-87b31fa2ffa3') // right('6e9c5587-a342-4b63-a901-87b31fa2ffa3')
 ```
+
+## optional
+
+```ts
+import * as t from 'io-ts'
+import { optional } from 'io-ts-types'
+
+const optionalNumber = optional(t.number);
+optionalNumber.is(123) // true
+optionalNumber.is(undefined) // true
+```

@@ -39,3 +39,6 @@ export { uuid } from './string/uuid'
 
 // io-ts
 export { fallback } from './fallback'
+
+// optional
+export { optional } from './optional'

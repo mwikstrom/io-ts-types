@@ -26,7 +26,8 @@ import {
   fromNewtypeCurried,
   uuid,
   fromNullable,
-  fallback
+  fallback,
+  optional
 } from '../src'
 import { left, right } from 'fp-ts/lib/Either'
 import { none, some } from 'fp-ts/lib/Option'
@@ -361,3 +362,67 @@ it('fallback', () => {
   assert.deepEqual(invalidFallback.is(1), true, 'is on valid with invalid fallback')
   assert.deepEqual(invalidFallback.is(-1), false, 'is on invalid with invalid fallback')
 })
+
+describe('optional', () => {
+  it('should succeed validating a valid value', () => {
+    const T = optional(t.number)
+    assertSuccess(T.decode(0))
+    assertSuccess(T.decode(1))
+    assertSuccess(T.decode(undefined))
+  })
+
+  it('should return the same reference if validation succeeded', () => {
+    const T = optional(t.Dictionary)
+    const value = {}
+    assertStrictEqual(T.decode(value), value)
+  })
+
+  it('should fail validating an invalid value', () => {
+    const T = optional(t.Integer)
+    assertFailure(T.decode('a'), ['Invalid value "a" supplied to : (Integer | undefined)'])
+    assertFailure(T.decode(1.2), ['Invalid value 1.2 supplied to : (Integer | undefined)'])
+  })
+
+  it('should serialize a deserialized', () => {
+    const T = optional(DateFromNumber)
+    assert.deepEqual(T.encode(new Date(0)), 0)
+    assert.deepEqual(T.encode(undefined), undefined)
+  })
+
+  it('should return the same reference when serializing', () => {
+    const T = optional(t.array(t.number))
+    assert.strictEqual(T.encode, t.identity)
+  })
+
+  it('should type guard', () => {
+    const T = optional(t.Integer)
+    assert.strictEqual(T.is(1.2), false)
+    assert.strictEqual(T.is('a'), false)
+    assert.strictEqual(T.is(1), true)
+    assert.strictEqual(T.is(undefined), true)
+  })
+
+  it('should assign a default name', () => {
+    const T1 = optional(t.number)
+    assert.strictEqual(T1.name, '(number | undefined)')
+    const T2 = optional(t.number, 'T2')
+    assert.strictEqual(T2.name, 'T2')
+  })
+})
+
+//
+// helpers
+//
+
+function assertSuccess<T>(validation: t.Validation<T>): void {
+  assert.ok(validation.isRight())
+}
+
+function assertFailure<T>(validation: t.Validation<T>, descriptions: Array<string>): void {
+  assert.ok(validation.isLeft())
+  assert.deepEqual(PathReporter.report(validation), descriptions)
+}
+
+function assertStrictEqual<T>(validation: t.Validation<T>, value: any): void {
+  assert.strictEqual(validation.fold<any>(t.identity, t.identity), value)
+}
